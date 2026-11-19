@@ -1,17 +1,21 @@
 import unittest
-
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from uuid import UUID
 
 from cloudlog_engine.schema import (
-    AuthOutcome, AuthenticationInfo, CanonicalEvent, EventSeverity, HTTPInfo, SourceInfo,
+    AuthenticationInfo,
+    AuthOutcome,
+    CanonicalEvent,
+    EventSeverity,
+    HTTPInfo,
+    SourceInfo,
 )
 
 
 class CanonicalEventTests(unittest.TestCase):
     def make_event(self, **overrides):
         data = {
-            "timestamp": datetime(2026, 1, 2, 3, 4, tzinfo=timezone.utc),
+            "timestamp": datetime(2026, 1, 2, 3, 4, tzinfo=UTC),
             "event_type": "http.request",
             "source": SourceInfo(name="edge-proxy", format="nginx"),
         }
@@ -40,7 +44,13 @@ class CanonicalEventTests(unittest.TestCase):
             self.make_event(client_ip="not-an-ip")
 
     def test_http_fields_are_validated_and_normalized(self):
-        http = HTTPInfo(method="get", target="/health", status_code=200, response_bytes=12, duration_ms=1.5)
+        http = HTTPInfo(
+            method="get",
+            target="/health",
+            status_code=200,
+            response_bytes=12,
+            duration_ms=1.5,
+        )
         self.assertEqual(self.make_event(http=http).http.method, "GET")
         with self.assertRaisesRegex(ValueError, "status_code"):
             HTTPInfo(status_code=700)

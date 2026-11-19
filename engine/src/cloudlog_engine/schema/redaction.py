@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import ipaddress
 import re
-from dataclasses import dataclass, replace
 from collections.abc import Mapping
+from dataclasses import dataclass, replace
 from typing import Any
 
 from cloudlog_engine.schema.events import CanonicalEvent

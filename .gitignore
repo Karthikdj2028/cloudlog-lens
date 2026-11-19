@@ -2,42 +2,51 @@
 __pycache__/
 *.py[cod]
 *.egg-info/
+*.egg
+build/
+dist/
+htmlcov/
+.coverage*
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
 .venv/
 venv/
 
-# Frontend / Node
+# Node / Vite
 node_modules/
-dist/
-build/
-.vite/
+frontend/dist/
+frontend/.vite/
 coverage/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
 
-# Tauri / Rust
+# Rust / Tauri
 target/
+**/target/
 src-tauri/target/
+desktop/src-tauri/gen/
 
-# Local data and secrets
+# Local configuration, secrets, databases, and log data
 .env
-.env.*
+*.env
 !.env.example
 *.db
 *.sqlite
 *.sqlite3
+*.log
 data/
 uploads/
 logs/
-*.log
 secrets/
 
-# Temporary processing data
+# Engine temporary files
 .tmp/
 spill/
 .job-tmp/
 
-# OS / editor
+# OS / editors
 .DS_Store
 Thumbs.db
 .idea/

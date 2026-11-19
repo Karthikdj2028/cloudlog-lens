@@ -1,8 +1,6 @@
 name: M1 foundation checks
 
 on:
-  push:
-    branches: [main, "feat/**", "chore/**"]
   pull_request:
   workflow_dispatch:
 

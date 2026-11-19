@@ -5,7 +5,8 @@ from __future__ import annotations
 import ipaddress
 import re
 from dataclasses import dataclass, replace
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from cloudlog_engine.schema.events import CanonicalEvent
 
@@ -73,7 +74,10 @@ def _redact_value(value: Any, policy: RedactionPolicy, key: str | None = None) -
     if key is not None and _normalize_key(key) in policy.sensitive_fields:
         return policy.replacement
     if isinstance(value, Mapping):
-        return {str(child_key): _redact_value(child, policy, str(child_key)) for child_key, child in value.items()}
+        return {
+            str(child_key): _redact_value(child, policy, str(child_key))
+            for child_key, child in value.items()
+        }
     if isinstance(value, (list, tuple)):
         return [_redact_value(child, policy) for child in value]
     return value

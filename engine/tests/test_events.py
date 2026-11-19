@@ -1,7 +1,8 @@
 import unittest
 
 from datetime import datetime, timedelta, timezone
-from uuid import UUID 
+from uuid import UUID
+
 from cloudlog_engine.schema import (
     AuthOutcome, AuthenticationInfo, CanonicalEvent, EventSeverity, HTTPInfo, SourceInfo,
 )

@@ -1,5 +1,6 @@
 [tool.pytest.ini_options]
 testpaths = ["engine/tests", "backend/tests"]
+pythonpath = ["engine/src"]
 addopts = "-ra"
 
 [tool.ruff]

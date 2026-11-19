@@ -46,7 +46,7 @@ class RedactionTests(unittest.TestCase):
         remasked = apply_redaction(masked, RedactionPolicy(mask_client_ips=True, ipv4_prefix=16))
         self.assertEqual(remasked.client_ip, "192.0.2.0/24")
         ipv6 = CanonicalEvent(
-            timestamp=datetime(2026, 2, 1, tzinfo=timezone.utc),
+            timestamp=datetime(2026, 2, 1, tzinfo=UTC),
             event_type="auth.failure",
             source=SourceInfo(name="auth", format="syslog"),
             client_ip="2001:db8::1234",

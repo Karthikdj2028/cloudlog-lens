@@ -1,9 +1,11 @@
 import unittest
-
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from cloudlog_engine.schema import (
-    CanonicalEvent, RedactionPolicy, SourceInfo, apply_redaction,
+    CanonicalEvent,
+    RedactionPolicy,
+    SourceInfo,
+    apply_redaction,
     prepare_event_for_persistence,
 )
 
@@ -11,7 +13,7 @@ from cloudlog_engine.schema import (
 class RedactionTests(unittest.TestCase):
     def make_event(self):
         return CanonicalEvent(
-            timestamp=datetime(2026, 2, 1, tzinfo=timezone.utc),
+            timestamp=datetime(2026, 2, 1, tzinfo=UTC),
             event_type="http.request",
             source=SourceInfo(name="proxy", format="jsonl"),
             client_ip="192.0.2.44",
@@ -52,13 +54,17 @@ class RedactionTests(unittest.TestCase):
         self.assertEqual(apply_redaction(ipv6, policy).client_ip, "2001:db8::/48")
 
     def test_custom_sensitive_fields_and_replacement(self):
-        policy = RedactionPolicy(sensitive_fields=frozenset({"accept", "attempt"}), replacement="<hidden>")
+        policy = RedactionPolicy(
+            sensitive_fields=frozenset({"accept", "attempt"}),
+            replacement="<hidden>",
+        )
         redacted = apply_redaction(self.make_event(), policy)
         self.assertEqual(redacted.attributes["headers"]["Accept"], "<hidden>")
         self.assertEqual(redacted.attributes["attempt"], "<hidden>")
 
     def test_persistence_helper_is_an_explicit_redaction_boundary(self):
-        result = prepare_event_for_persistence(self.make_event(), RedactionPolicy(mask_client_ips=True))
+        policy = RedactionPolicy(mask_client_ips=True)
+        result = prepare_event_for_persistence(self.make_event(), policy)
         self.assertEqual(result.client_ip, "192.0.2.0/24")
         self.assertEqual(result.attributes["headers"]["Authorization"], "[REDACTED]")
 

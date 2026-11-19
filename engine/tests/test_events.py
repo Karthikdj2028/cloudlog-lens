@@ -24,7 +24,8 @@ class CanonicalEventTests(unittest.TestCase):
 
     def test_timestamp_is_normalized_to_utc(self):
         value = datetime(2026, 1, 2, 8, 34, tzinfo=timezone(timedelta(hours=5, minutes=30)))
-        self.assertEqual(self.make_event(timestamp=value).timestamp, datetime(2026, 1, 2, 3, 4, tzinfo=timezone.utc))
+        expected = datetime(2026, 1, 2, 3, 4, tzinfo=UTC)
+        self.assertEqual(self.make_event(timestamp=value).timestamp, expected)
 
     def test_naive_timestamp_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "timezone-aware"):

@@ -5,10 +5,11 @@ from __future__ import annotations
 import ipaddress
 import math
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 from uuid import UUID, uuid4
 
 
@@ -57,7 +58,8 @@ class HTTPInfo:
 
     def __post_init__(self) -> None:
         if self.method is not None:
-            object.__setattr__(self, "method", _required_text(self.method, "http.method", 32).upper())
+            method = _required_text(self.method, "http.method", 32).upper()
+            object.__setattr__(self, "method", method)
         if self.target is not None:
             object.__setattr__(self, "target", _required_text(self.target, "http.target", 4096))
         if self.protocol is not None:
@@ -115,7 +117,7 @@ class CanonicalEvent:
     event_type: str
     source: SourceInfo
     event_id: str = field(default_factory=lambda: str(uuid4()))
-    observed_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    observed_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     schema_version: str = "1.0"
     severity: EventSeverity = EventSeverity.UNKNOWN
     host: str | None = None
@@ -218,7 +220,7 @@ def _utc_datetime(value: datetime, field_name: str) -> datetime:
         raise TypeError(f"{field_name} must be a datetime")
     if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError(f"{field_name} must be timezone-aware")
-    return value.astimezone(timezone.utc)
+    return value.astimezone(UTC)
 
 
 def _freeze_json(value: Any, depth: int) -> Any:
@@ -238,7 +240,9 @@ def _freeze_json(value: Any, depth: int) -> Any:
         frozen: dict[str, Any] = {}
         for key, child in value.items():
             if not isinstance(key, str) or not key.strip() or len(key) > 128 or "\x00" in key:
-                raise ValueError("attribute object keys must be non-empty strings of at most 128 characters")
+                raise ValueError(
+                    "attribute object keys must be non-empty strings of at most 128 characters"
+                )
             frozen[key] = _freeze_json(child, depth + 1)
         return MappingProxyType(frozen)
     if isinstance(value, (list, tuple)):

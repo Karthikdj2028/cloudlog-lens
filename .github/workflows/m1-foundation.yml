@@ -1,0 +1,44 @@
+name: M1 foundation checks
+
+on:
+  push:
+    branches: [main, "feat/**", "chore/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install engine and development tools
+        run: python -m pip install -e "./engine[dev]"
+      - name: Run engine unit tests
+        run: python -m pytest engine/tests
+      - name: Lint engine
+        run: ruff check engine/src engine/tests
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package.json
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm install
+      - name: Type check frontend
+        working-directory: frontend
+        run: npm run typecheck
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build

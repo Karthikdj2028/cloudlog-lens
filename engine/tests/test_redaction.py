@@ -1,6 +1,7 @@
 import unittest
 
-from datetime import datetime, timezone 
+from datetime import datetime, timezone
+
 from cloudlog_engine.schema import (
     CanonicalEvent, RedactionPolicy, SourceInfo, apply_redaction,
     prepare_event_for_persistence,

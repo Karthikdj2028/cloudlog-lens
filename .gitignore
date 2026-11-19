@@ -30,6 +30,7 @@ desktop/src-tauri/gen/
 
 # Local configuration, secrets, databases, and log data
 .env
+.env.*
 *.env
 !.env.example
 *.db

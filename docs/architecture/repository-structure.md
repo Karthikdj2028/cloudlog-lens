@@ -1,123 +1,68 @@
 # Canonical Repository Structure
 
-This tree is the agreed target layout. Empty package directories are represented by `.gitkeep` until their milestone adds real source files. Do not create placeholder implementation modules merely to make the tree look populated.
+The active implementation layout follows the M1 monorepo plan. Existing M0 documentation paths are retained for continuity; the following is the canonical source layout for new code.
 
 ```text
 cloudlog-lens/
-├── apps/
-│   ├── web/                         # Shared React + TypeScript frontend
-│   │   ├── public/
-│   │   └── src/
-│   │       ├── app/                  # App shell, router, providers
-│   │       ├── components/           # Shared UI components
-│   │       ├── features/             # Feature-oriented screens and state
-│   │       ├── hooks/
-│   │       ├── lib/                  # API client, utilities
-│   │       ├── styles/
-│   │       └── types/
-│   └── desktop/                     # Tauri v2 host and desktop packaging
-│       ├── src/
-│       └── src-tauri/
-│           ├── capabilities/
-│           ├── icons/
-│           └── src/
-├── backend/
-│   └── cloudlog_api/
-│       ├── api/v1/                   # Versioned HTTP routers
-│       ├── core/                     # Settings, security, errors, logging
-│       ├── dependencies/             # Request-scoped dependency wiring
-│       ├── models/                   # SQLAlchemy persistence models
-│       ├── repositories/             # Database access
-│       ├── schemas/                  # Pydantic contracts
-│       ├── services/                 # Application orchestration
-│       └── workers/                  # Background job execution
-├── engine/
-│   └── cloudlog_engine/
-│       ├── ingestion/
-│       ├── parsers/
-│       ├── normalization/
-│       ├── mapreduce/
-│       ├── analytics/
-│       ├── detection/
-│       └── export/
-├── contracts/                        # Canonical event and API contract docs
-├── docs/
-│   ├── architecture/
-│   │   └── decisions/
-│   ├── development/
-│   └── security/
-├── infrastructure/
-│   ├── docker/
-│   └── scripts/
-├── migrations/
-│   └── versions/
-├── rules/
-│   └── detections/
-├── sample-data/
-│   ├── apache/
-│   ├── nginx/
-│   ├── jsonl/
-│   └── linux-auth/
-├── tests/
-│   ├── unit/
-│   │   ├── engine/
-│   │   ├── backend/
-│   │   └── frontend/
-│   ├── integration/
-│   ├── e2e/
-│   ├── fixtures/
-│   └── performance/
 ├── .github/
-│   ├── ISSUE_TEMPLATE/
-│   └── workflows/
-├── .editorconfig
+├── backend/
+│   ├── pyproject.toml
+│   ├── app/
+│   │   ├── api/
+│   │   ├── core/
+│   │   ├── models/
+│   │   ├── services/
+│   │   └── alembic/
+│   └── tests/
+├── desktop/                         # Tauri v2 host (later desktop milestone)
+├── engine/
+│   ├── pyproject.toml
+│   ├── src/cloudlog_engine/
+│   │   ├── schema/                  # Canonical event contract and redaction
+│   │   ├── parsers/
+│   │   ├── mapreduce/
+│   │   └── detection/
+│   └── tests/
+├── frontend/
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── src/
+│       ├── components/
+│       ├── features/
+│       ├── hooks/
+│       └── services/
+├── docs/
+├── infrastructure/
+├── rules/
+├── sample-data/
+├── tests/
+│   └── fixtures/                    # Synthetic / licensed fixtures only
+├── .env.example
 ├── .gitignore
+├── CHANGELOG.md
 ├── CONTRIBUTING.md
-├── LICENSE (choose before first release)
 ├── README.md
 ├── ROADMAP.md
 └── SECURITY.md
 ```
 
-## Dependency direction
+## Package ownership and dependency direction
 
-```text
-apps/web ───────────────► backend HTTP API
-apps/desktop ───────────► apps/web + local API sidecar
-backend/cloudlog_api ───► engine/cloudlog_engine
-backend/cloudlog_api ───► persistence / migrations
-engine/cloudlog_engine ─► Python standard library + focused engine dependencies
-rules ──────────────────► consumed by engine detection layer
-contracts ──────────────► referenced by API, engine, and frontend tests
-```
+- `engine/` owns canonical events, parsing, normalization, MapReduce, and detection contracts. It has no runtime dependency on FastAPI, SQLAlchemy, Tauri, or frontend code.
+- `backend/` owns HTTP endpoints, settings, authorization, persistence, and orchestration. It may call the engine through its public Python API; the reverse dependency is forbidden.
+- `frontend/` owns the browser experience and communicates with the backend through versioned HTTP contracts. It never accesses the database directly.
+- `desktop/` owns Tauri lifecycle and sidecar integration. It reuses the frontend rather than forking product UI.
+- `rules/` contains declarative, versioned detection rules; it must not become an arbitrary code execution surface.
+- `tests/fixtures/` contains synthetic or explicitly licensed records only.
 
-The engine must not import the API, ORM, UI, or desktop host. The frontend must not access the database directly. Desktop-specific OS integration must not leak into web feature modules.
+## Runtime and privacy conventions
 
-## Directory ownership
+- Local workflows use SQLite; hosted multi-user deployments target PostgreSQL.
+- Normalize timestamps to UTC and validate canonical event fields before downstream processing.
+- Apply configured field redaction and optional IP masking during normalization, before persistence.
+- Never commit `.env` files, databases, raw logs, credentials, caches, or generated build output.
+- Empty directories use `.gitkeep` until a milestone introduces their first real implementation file.
 
-| Directory | Responsibility | Not responsible for |
-|---|---|---|
-| `apps/web` | Browser UI and shared client logic | Parsing files, database access |
-| `apps/desktop` | Tauri host, packaging, sidecar lifecycle | Detection logic, MapReduce |
-| `backend/cloudlog_api` | HTTP, authorization, orchestration, persistence boundary | Core map/shuffle/reduce algorithms |
-| `engine/cloudlog_engine` | Parsing, normalization, processing, analytics, detection | HTTP, ORM sessions, UI |
-| `rules` | Versioned detection definitions and metadata | Executable arbitrary user code |
-| `migrations` | Schema evolution | Runtime business logic |
-| `contracts` | Shared schemas and compatibility expectations | UI components |
-| `sample-data` | Synthetic or explicitly licensed fixtures | Real customer logs |
-| `tests` | Unit, integration, end-to-end, performance verification | Production runtime code |
-| `infrastructure` | Reproducible local/hosted operational assets | Application domain logic |
+## Compatibility note
 
-## Naming and packaging conventions
-
-- Python import package: `cloudlog_engine` and `cloudlog_api`.
-- Python modules: lowercase `snake_case.py`; public types use CapWords.
-- TypeScript components: `PascalCase.tsx`; hooks use `useThing.ts`.
-- Feature modules should be grouped by product capability, not by file extension alone.
-- API routes remain under `/api/v1`; breaking external contract changes require a versioning decision.
-- Detection rules carry stable IDs and explicit versions.
-- Keep generated output, local databases, uploaded logs, secrets, caches, and build artifacts out of Git.
-
-## Scaffold policy
-
-A `.gitkeep` means only that the directory is reserved for a planned responsibility. It does not indicate that the package is implemented or ready to import. Remove a placeholder when the first real file is added.
+The original M0 scaffold used `apps/web/`, `apps/desktop/`, `backend/cloudlog_api/`, and `engine/cloudlog_engine/`. Those placeholders are retained on the M1 branch to avoid destructive moves during review. New implementation work uses `frontend/`, `desktop/`, `backend/app/`, and `engine/src/cloudlog_engine/`. A dedicated cleanup can remove obsolete placeholders after the migration is accepted.

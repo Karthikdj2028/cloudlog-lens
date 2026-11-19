@@ -16,7 +16,7 @@ This directory records decisions that constrain multiple milestones. A decision 
 
 **Context:** The product needs clear separation between UI, API orchestration, and compute-heavy processing without the operational burden of distributed services.
 
-**Decision:** Use one deployable API application with explicit internal packages. Keep the Python processing engine framework-independent and independently testable.
+**Decision:** Use one deployable API application in `backend/app/` with explicit internal packages. Keep the Python processing engine in `engine/src/cloudlog_engine/` framework-independent and independently testable.
 
 **Alternatives:** Microservices, a single unstructured Python application.
 
@@ -26,7 +26,7 @@ This directory records decisions that constrain multiple milestones. A decision 
 
 **Context:** Web and desktop should provide the same product experience and feature behavior.
 
-**Decision:** Use React + TypeScript for the shared frontend and Tauri v2 as the desktop host.
+**Decision:** Use React + TypeScript in `frontend/` for the shared UI and Tauri v2 in `desktop/` as the desktop host.
 
 **Alternatives:** Separate native desktop UI; Electron.
 

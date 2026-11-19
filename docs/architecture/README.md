@@ -31,7 +31,7 @@ The browser and desktop clients use the same React application and versioned HTT
 
 ## 3. Logical layers and ownership
 
-### Client layer — `apps/web`
+### Client layer — `frontend`
 
 - React + TypeScript + Vite.
 - Tailwind CSS and shadcn/ui design primitives.
@@ -39,7 +39,7 @@ The browser and desktop clients use the same React application and versioned HTT
 - Typed API client, route composition, query/cache state, and accessible interaction patterns.
 - No direct database access and no parsing of raw log files as a substitute for backend analysis.
 
-### Desktop host — `apps/desktop`
+### Desktop host — `desktop`
 
 - Tauri v2 shell around the shared frontend.
 - Starts/stops the Python sidecar and manages application lifecycle.
@@ -47,7 +47,7 @@ The browser and desktop clients use the same React application and versioned HTT
 - Owns OS integration (file picker, application data directory, window lifecycle), not product/business logic.
 - Never embeds long-lived credentials in the frontend bundle.
 
-### API application — `backend/cloudlog_api`
+### API application — `backend/app`
 
 - FastAPI routers under `/api/v1`, request/response schemas, dependency wiring, authentication/session boundaries, and application services.
 - Validates request sizes, paths, identifiers, and workspace access before invoking the engine.
@@ -55,7 +55,7 @@ The browser and desktop clients use the same React application and versioned HTT
 - Emits progress over Server-Sent Events initially. The API must not hold a request open for an entire large analysis.
 - Does not contain MapReduce algorithms or parser-specific business logic.
 
-### Processing engine — `engine/cloudlog_engine`
+### Processing engine — `engine/src/cloudlog_engine`
 
 A framework-independent Python package with explicit modules:
 
@@ -72,7 +72,7 @@ Engine functions should accept explicit inputs and return typed results. They mu
 ### Persistence and migrations
 
 - SQLAlchemy models and repositories live in `backend/cloudlog_api` (or a future explicitly separated persistence package if justified).
-- Alembic migration scripts live in `migrations`.
+- Alembic migration configuration and revisions live under `backend/app/alembic`.
 - SQLite is the local/desktop default; PostgreSQL is the hosted target.
 - SQLite write access is serialized through one owning application process. Do not let independent worker processes write to the same SQLite database.
 - Store normalized events and job state in persistence; use bounded intermediate storage for shuffle/spill and clean it up safely.

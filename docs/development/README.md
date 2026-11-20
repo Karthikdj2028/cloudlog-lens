@@ -1,41 +1,59 @@
 # Development Workflow
 
-## Current milestone
+## Current state
 
-The repository currently contains architecture documentation and an empty directory scaffold. No backend, engine, frontend, desktop shell, or CI test suite has been implemented yet. Do not interpret `.gitkeep` placeholders as working packages.
+M0 architecture documentation is established. M1 adds the monorepo workspace scaffold, Python package metadata, a minimal React toolchain entry point, the canonical event schema v1.0, redaction helpers, unit tests, and the initial CI checks. Log parsers, MapReduce algorithms, API endpoints, persistence models, product screens, and the Tauri runtime are still future work.
 
-## Planned local prerequisites
+## Local prerequisites
 
-Versions will be pinned in the relevant manifests when each package is introduced. Expected toolchain:
+- Python 3.12+ for the engine and API.
+- Node.js 24 and npm for the frontend scaffold.
+- Rust stable and Tauri v2 prerequisites when the desktop milestone begins.
+- Git and SQLite for later local persistence work.
 
-- Python 3.12+ for the API and processing engine.
-- Node.js LTS and a package manager for the React frontend.
-- Rust stable and Tauri v2 prerequisites for desktop packaging.
-- Git and a supported SQLite runtime.
+## M0–M7 sequence
 
-## Milestone sequence
+1. **M0 — Architecture foundation:** architecture docs, package boundaries, initial repository policy, and security principles.
+2. **M1 — Repository and event schema:** monorepo scaffold, development manifests, canonical event contract v1.0, redaction utilities, and schema tests.
+3. **M2 — Ingestion and parsing:** streaming readers, Apache/Nginx/JSONL parsers, parser fixtures, and malformed-record reporting.
+4. **M3 — MapReduce engine:** sequential reference runner, multiprocessing runner, partition/shuffle/reduce, bounded spill, metrics, and equivalence tests.
+5. **M4 — Persistence and detections:** SQLAlchemy models, Alembic migrations, job lifecycle, explainable rules, and evidence.
+6. **M5 — Web application:** FastAPI API, shared React experience, import workflow, job progress, dashboards, and event/finding explorers.
+7. **M6 — Desktop application:** Tauri v2 shell, sidecar lifecycle, loopback/token security, and packaging.
+8. **M7 — Hardening and extensions:** PostgreSQL hosted mode, workspace authorization, security regression tests, optional Hadoop/HDFS, live tailing, and custom rules.
 
-1. **M0 — Architecture foundation:** architecture docs, package boundaries, repository scaffold, security principles. (This milestone.)
-2. **M1 — Ingestion and parsing:** streaming readers, Apache/Nginx/JSONL parsers, canonical event contract, parser fixtures.
-3. **M2 — MapReduce engine:** sequential runner, multiprocessing runner, partition/shuffle/reduce, bounded spill, metrics, equivalence tests.
-4. **M3 — Persistence and detections:** SQLAlchemy models, Alembic migrations, job lifecycle, explainable rules/evidence.
-5. **M4 — Web application:** FastAPI API, shared React experience, import workflow, job progress, dashboards and event/finding explorers.
-6. **M5 — Desktop application:** Tauri v2 shell, sidecar lifecycle, local security boundary, packaging.
-7. **M6 — Hardening and hosted deployment:** security regression tests, PostgreSQL, workspace authorization, backups, release automation.
-8. **M7 — Extensions:** optional Hadoop Streaming/HDFS adapter, live tailing, custom parsers/rules, community integrations.
+## Engine development
+
+From the repository root, run the dependency-free unit suite:
+
+    PYTHONPATH=engine/src python3 -m unittest discover -s engine/tests -v
+
+Install the engine package and development tools:
+
+    python3 -m venv .venv
+    . .venv/bin/activate
+    python -m pip install -e "./engine[dev]"
+    python -m pytest engine/tests
+    ruff check engine/src engine/tests
+
+## Frontend development
+
+    cd frontend
+    npm install
+    npm run typecheck
+    npm run build
 
 ## Engineering workflow
 
-- Start each milestone with repository inspection and a written scope.
-- Create a focused branch and keep commits reviewable.
-- Write or update tests alongside implementation; do not defer all tests to the end.
-- Run formatters, linters, type checks, unit tests, and relevant integration tests before claiming completion.
-- Record exact commands and outcomes. If a check cannot run, state why; never report it as passed.
-- Keep dependencies pinned and review licenses, maintenance, and supply-chain posture.
-- Do not commit real logs, credentials, personal data, databases, or generated build output.
+- Inspect the repository and define scope before each milestone.
+- Keep milestones on focused branches and submit reviewable pull requests.
+- Add tests alongside behavior; run formatter, lint, type checks, and relevant suites before claiming completion.
+- Record exact commands and outcomes. If a check cannot run, state why.
+- Pin direct dependencies and review maintenance, license, and supply-chain posture.
+- Do not commit real logs, credentials, personal data, local databases, or generated build output.
 - Use synthetic fixtures with documented provenance.
-- Update docs when an architectural boundary changes.
+- Update architecture and roadmap documents when package ownership changes.
 
 ## Definition of done
 
-A milestone is complete only when its stated deliverables exist, the scope has not silently expanded, relevant tests/checks have been run, failures and limitations are documented, and the repository status/commit evidence is reported.
+A milestone is complete only when deliverables exist, scope is respected, CI checks pass, documentation reflects actual behavior, and remaining limitations are stated.

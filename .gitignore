@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Frontend / Node
+node_modules/
+dist/
+build/
+.vite/
+coverage/
+
+# Tauri / Rust
+target/
+src-tauri/target/
+
+# Local data and secrets
+.env
+.env.*
+!.env.example
+*.db
+*.sqlite
+*.sqlite3
+data/
+uploads/
+logs/
+*.log
+secrets/
+
+# Temporary processing data
+.tmp/
+spill/
+.job-tmp/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

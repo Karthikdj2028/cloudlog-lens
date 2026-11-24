@@ -53,3 +53,43 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# Additional Python artifacts
+*$py.class
+*.so
+.Python
+.eggs/
+develop-eggs/
+downloads/
+wheels/
+sdist/
+.installed.cfg
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Additional test coverage
+.coverage
+coverage.xml
+
+# Additional frontend artifacts
+.pnp
+.pnp.js
+.npm/
+dist-ssr/
+.vite/
+*.tsbuildinfo
+
+# Local runtime data
+local_data/
+
+# Additional editor files
+*.swo
+
+# SQLite temporary files
+*.db-journal
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm

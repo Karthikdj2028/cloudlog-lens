@@ -1,0 +1,3 @@
+{"timestamp":"2026-11-24T10:03:00Z","event_type":"auth.failure","severity":"warning","client_ip":"192.0.2.80","user":"demo","auth":{"outcome":"failure","action":"login","account":"demo"},"attributes":{"request_id":"fixture-001","password":"should-not-survive"}}
+{"timestamp":"2026-11-24T10:03:04+00:00","event_type":"http.request","http":{"method":"GET","target":"/health","status_code":200},"attributes":{"region":"test"}}
+not json

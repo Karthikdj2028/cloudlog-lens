@@ -4,7 +4,7 @@
 
 CloudLog Lens is a local-first platform for importing, normalizing, analyzing, and investigating infrastructure logs. It combines a React web client, a planned Tauri desktop shell, a FastAPI application layer, and a framework-independent Python processing engine.
 
-> **Current status:** M0 architecture foundation is under review. M1 adds the repository workspace configuration and the first canonical event schema with privacy redaction. Full parsers, MapReduce execution, API behavior, persistence, and product screens are not yet implemented.
+> **Current status:** M0 and M1 foundations are implemented. M2 is in progress: bounded-memory ingestion, Apache/Nginx Combined parsing, and JSON Lines parsing are being added. MapReduce execution, persistence, API behavior, and product screens remain future work.
 
 ## Product principles
 

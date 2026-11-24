@@ -10,7 +10,6 @@ from cloudlog_engine.parsers import (
     NginxCombinedParser,
 )
 
-
 FIXTURES = Path(__file__).resolve().parents[2] / "tests" / "fixtures"
 
 
@@ -42,11 +41,13 @@ class ParserTests(unittest.TestCase):
     def test_access_parser_classifies_invalid_timestamp_and_ip(self):
         parser = ApacheCombinedParser()
         invalid_timestamp = SourceLine(
-            1, 0,
+            1,
+            0,
             '192.0.2.1 - - [not-a-date] "GET / HTTP/1.1" 200 1 "-" "test"',
         )
         invalid_ip = SourceLine(
-            2, 80,
+            2,
+            80,
             'not-an-ip - - [24/Nov/2026:10:00:00 +0000] "GET / HTTP/1.1" 200 1 "-" "test"',
         )
         self.assertEqual(

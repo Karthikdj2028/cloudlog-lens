@@ -89,7 +89,8 @@ class CanonicalEventTests(unittest.TestCase):
 
     def test_to_dict_is_json_friendly(self):
         event = self.make_event(
-            severity="info", auth=AuthenticationInfo(outcome="success"),
+            severity="info",
+            auth=AuthenticationInfo(outcome="success"),
             http=HTTPInfo(method="post", status_code=201),
         )
         payload = event.to_dict()

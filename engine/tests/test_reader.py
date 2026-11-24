@@ -19,9 +19,7 @@ class StreamingReaderTests(unittest.TestCase):
 
     def test_empty_lines_are_preserved_for_parser_skip_accounting(self):
         records = list(iter_source_lines(io.BytesIO(b"\nvalue\n")))
-        source_texts = [
-            record.text for record in records if isinstance(record, SourceLine)
-        ]
+        source_texts = [record.text for record in records if isinstance(record, SourceLine)]
         self.assertEqual(source_texts, ["", "value"])
 
     def test_oversized_line_is_discarded_and_reader_recovers(self):
@@ -44,9 +42,7 @@ class StreamingReaderTests(unittest.TestCase):
         self.assertEqual(records[1], SourceLine(2, 6, "valid"))
 
     def test_utf8_bom_is_removed_from_first_record_only(self):
-        records = list(
-            iter_source_lines(io.BytesIO(b"\xef\xbb\xbffirst\n\xef\xbb\xbfsecond"))
-        )
+        records = list(iter_source_lines(io.BytesIO(b"\xef\xbb\xbffirst\n\xef\xbb\xbfsecond")))
         self.assertEqual(records[0].text, "first")
         self.assertEqual(records[1].text, "\ufeffsecond")
 

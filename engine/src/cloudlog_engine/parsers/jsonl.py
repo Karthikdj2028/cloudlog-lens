@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ipaddress
 import json
 from collections.abc import Mapping
 from datetime import datetime
@@ -116,12 +117,25 @@ class JSONLinesParser(BaseParser):
         client_ip = _first(data, "client_ip", "remote_addr", "ip", "src_ip")
         if client_ip == "-":
             client_ip = None
-        if client_ip is not None and not isinstance(client_ip, str):
-            return self.failure(
-                line,
-                IngestionIssueCode.INVALID_IP,
-                "Client address must be an IPv4/IPv6 address or CIDR string",
-            )
+        if client_ip is not None:
+            if not isinstance(client_ip, str):
+                return self.failure(
+                    line,
+                    IngestionIssueCode.INVALID_IP,
+                    "Client address must be an IPv4/IPv6 address or CIDR string",
+                )
+            try:
+                client_ip = (
+                    str(ipaddress.ip_network(client_ip, strict=False))
+                    if "/" in client_ip
+                    else ipaddress.ip_address(client_ip).compressed
+                )
+            except ValueError:
+                return self.failure(
+                    line,
+                    IngestionIssueCode.INVALID_IP,
+                    "Client address must be a valid IPv4/IPv6 address or CIDR",
+                )
 
         http_data = data.get("http")
         if http_data is not None and not isinstance(http_data, dict):

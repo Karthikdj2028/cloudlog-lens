@@ -20,10 +20,10 @@ from cloudlog_engine.schema.events import (
 )
 
 _COMBINED = re.compile(
-    r'^(?P<client>\S+) \S+ (?P<user>\S+) '
-    r'\[(?P<timestamp>[^\]]+)\] '
+    r"^(?P<client>\S+) \S+ (?P<user>\S+) "
+    r"\[(?P<timestamp>[^\]]+)\] "
     r'"(?P<request>[^"]*)" '
-    r'(?P<status>\d{3}|-) (?P<bytes>\d+|-) '
+    r"(?P<status>\d{3}|-) (?P<bytes>\d+|-) "
     r'"(?P<referer>[^"]*)" "(?P<agent>[^"]*)"$'
 )
 _REQUEST = re.compile(
@@ -36,8 +36,18 @@ _TIMESTAMP = re.compile(
     r"(?P<sign>[+-])(?P<offset_hour>\d{2})(?P<offset_minute>\d{2})$"
 )
 _MONTHS = {
-    "Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
-    "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12,
+    "Jan": 1,
+    "Feb": 2,
+    "Mar": 3,
+    "Apr": 4,
+    "May": 5,
+    "Jun": 6,
+    "Jul": 7,
+    "Aug": 8,
+    "Sep": 9,
+    "Oct": 10,
+    "Nov": 11,
+    "Dec": 12,
 }
 
 
@@ -138,8 +148,10 @@ class _CombinedAccessParser(BaseParser):
         severity = EventSeverity.UNKNOWN
         if status_code is not None:
             severity = (
-                EventSeverity.ERROR if status_code >= 500
-                else EventSeverity.WARNING if status_code >= 400
+                EventSeverity.ERROR
+                if status_code >= 500
+                else EventSeverity.WARNING
+                if status_code >= 400
                 else EventSeverity.INFO
             )
 

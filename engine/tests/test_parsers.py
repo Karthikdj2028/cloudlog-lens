@@ -4,8 +4,11 @@ from pathlib import Path
 
 from cloudlog_engine.ingestion import IngestionIssueCode, parse_stream
 from cloudlog_engine.ingestion.models import SourceLine
-from cloudlog_engine.parsers import ApacheCombinedParser, JSONLinesParser, NginxCombinedParser
-
+from cloudlog_engine.parsers import (
+    ApacheCombinedParser,
+    JSONLinesParser,
+    NginxCombinedParser,
+)
 
 FIXTURES = Path(__file__).resolve().parents[2] / "tests" / "fixtures"
 
@@ -28,7 +31,8 @@ class ParserTests(unittest.TestCase):
 
     def test_nginx_combined_fixture(self):
         parser = NginxCombinedParser(source_name="nginx-gateway")
-        results = list(parse_stream(io.BytesIO((FIXTURES / "nginx_combined.log").read_bytes()), parser))
+        fixture = (FIXTURES / "nginx_combined.log").read_bytes()
+        results = list(parse_stream(io.BytesIO(fixture), parser))
         self.assertEqual(results[0].event.source.format, "nginx.combined")
         self.assertEqual(results[0].event.http.target, "/api/items")
         self.assertEqual(results[0].event.http.response_bytes, 321)
@@ -37,11 +41,13 @@ class ParserTests(unittest.TestCase):
     def test_access_parser_classifies_invalid_timestamp_and_ip(self):
         parser = ApacheCombinedParser()
         invalid_timestamp = SourceLine(
-            1, 0,
+            1,
+            0,
             '192.0.2.1 - - [not-a-date] "GET / HTTP/1.1" 200 1 "-" "test"',
         )
         invalid_ip = SourceLine(
-            2, 80,
+            2,
+            80,
             'not-an-ip - - [24/Nov/2026:10:00:00 +0000] "GET / HTTP/1.1" 200 1 "-" "test"',
         )
         self.assertEqual(
@@ -55,7 +61,8 @@ class ParserTests(unittest.TestCase):
 
     def test_jsonl_fixture_maps_fields_and_redacts_sensitive_attributes(self):
         parser = JSONLinesParser(source_name="app-json")
-        results = list(parse_stream(io.BytesIO((FIXTURES / "events.jsonl").read_bytes()), parser))
+        fixture = (FIXTURES / "events.jsonl").read_bytes()
+        results = list(parse_stream(io.BytesIO(fixture), parser))
         event = results[0].event
         self.assertEqual(event.source.name, "app-json")
         self.assertEqual(event.event_type, "auth.failure")
@@ -68,9 +75,18 @@ class ParserTests(unittest.TestCase):
     def test_jsonl_classifies_timestamp_ip_and_duplicate_key_errors(self):
         parser = JSONLinesParser()
         cases = [
-            ('{"timestamp":"2026-11-24T10:00:00","event_type":"test"}', IngestionIssueCode.INVALID_TIMESTAMP),
-            ('{"timestamp":"2026-11-24T10:00:00Z","client_ip":"999.1.1.1"}', IngestionIssueCode.INVALID_IP),
-            ('{"timestamp":"2026-11-24T10:00:00Z","x":1,"x":2}', IngestionIssueCode.INVALID_JSON),
+            (
+                '{"timestamp":"2026-11-24T10:00:00","event_type":"test"}',
+                IngestionIssueCode.INVALID_TIMESTAMP,
+            ),
+            (
+                '{"timestamp":"2026-11-24T10:00:00Z","client_ip":"999.1.1.1"}',
+                IngestionIssueCode.INVALID_IP,
+            ),
+            (
+                '{"timestamp":"2026-11-24T10:00:00Z","x":1,"x":2}',
+                IngestionIssueCode.INVALID_JSON,
+            ),
         ]
         for text, expected in cases:
             with self.subTest(expected=expected):

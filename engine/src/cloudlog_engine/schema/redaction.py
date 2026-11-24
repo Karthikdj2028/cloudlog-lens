@@ -10,10 +10,21 @@ from typing import Any
 
 from cloudlog_engine.schema.events import CanonicalEvent
 
-DEFAULT_SENSITIVE_FIELDS = frozenset({
-    "authorization", "cookie", "set-cookie", "password", "passwd", "token",
-    "access_token", "refresh_token", "api_key", "secret", "session_id",
-})
+DEFAULT_SENSITIVE_FIELDS = frozenset(
+    {
+        "authorization",
+        "cookie",
+        "set-cookie",
+        "password",
+        "passwd",
+        "token",
+        "access_token",
+        "refresh_token",
+        "api_key",
+        "secret",
+        "session_id",
+    }
+)
 
 
 @dataclass(frozen=True, slots=True)

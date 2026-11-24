@@ -152,7 +152,7 @@ class JSONLinesParser(BaseParser):
         http_protocol = _first(http_data, "protocol", "http_version") or _first(
             data, "http_protocol", "protocol", "http_version"
         )
-        status = _first(http_data, "status_code", "status") 
+        status = _first(http_data, "status_code", "status")
         if status is None:
             status = _first(data, "status_code", "status")
         response_bytes = _first(http_data, "response_bytes", "bytes_sent")
@@ -165,8 +165,12 @@ class JSONLinesParser(BaseParser):
             has_http = any(
                 value is not None
                 for value in (
-                    http_method, http_target, http_protocol, status,
-                    response_bytes, duration_ms,
+                    http_method,
+                    http_target,
+                    http_protocol,
+                    status,
+                    response_bytes,
+                    duration_ms,
                 )
             )
             http = (
@@ -178,7 +182,8 @@ class JSONLinesParser(BaseParser):
                     response_bytes=_optional_int(response_bytes),
                     duration_ms=duration_ms,
                 )
-                if has_http else None
+                if has_http
+                else None
             )
         except (TypeError, ValueError):
             return self.failure(
@@ -221,14 +226,51 @@ class JSONLinesParser(BaseParser):
                 "attributes must be a JSON object",
             )
         consumed = {
-            "timestamp", "@timestamp", "time", "ts", "observed_at", "event_id",
-            "schema_version", "event_type", "eventType", "type", "severity", "level",
-            "host", "hostname", "client_ip", "remote_addr", "ip", "src_ip",
-            "user", "username", "account", "message", "msg", "http", "http_method",
-            "method", "http_target", "target", "path", "url", "http_protocol",
-            "protocol", "http_version", "status_code", "status", "response_bytes",
-            "bytes_sent", "duration_ms", "auth", "authentication", "auth_outcome",
-            "auth_action", "auth_account", "attributes", "source",
+            "timestamp",
+            "@timestamp",
+            "time",
+            "ts",
+            "observed_at",
+            "event_id",
+            "schema_version",
+            "event_type",
+            "eventType",
+            "type",
+            "severity",
+            "level",
+            "host",
+            "hostname",
+            "client_ip",
+            "remote_addr",
+            "ip",
+            "src_ip",
+            "user",
+            "username",
+            "account",
+            "message",
+            "msg",
+            "http",
+            "http_method",
+            "method",
+            "http_target",
+            "target",
+            "path",
+            "url",
+            "http_protocol",
+            "protocol",
+            "http_version",
+            "status_code",
+            "status",
+            "response_bytes",
+            "bytes_sent",
+            "duration_ms",
+            "auth",
+            "authentication",
+            "auth_outcome",
+            "auth_action",
+            "auth_account",
+            "attributes",
+            "source",
         }
         merged_attributes = dict(attributes)
         for key, value in data.items():
@@ -237,8 +279,10 @@ class JSONLinesParser(BaseParser):
 
         event_type = _first(data, "event_type", "eventType", "type")
         if event_type is None:
-            event_type = "auth.activity" if auth is not None else (
-                "http.request" if http is not None else "log.record"
+            event_type = (
+                "auth.activity"
+                if auth is not None
+                else ("http.request" if http is not None else "log.record")
             )
         severity = _first(data, "severity", "level") or "unknown"
         host = _first(data, "host", "hostname")

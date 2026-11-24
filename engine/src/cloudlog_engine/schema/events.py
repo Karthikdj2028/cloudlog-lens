@@ -40,7 +40,8 @@ class SourceInfo:
         object.__setattr__(self, "name", _required_text(self.name, "source.name", 255))
         object.__setattr__(self, "format", _required_text(self.format, "source.format", 64))
         object.__setattr__(
-            self, "parser_version",
+            self,
+            "parser_version",
             _required_text(self.parser_version, "source.parser_version", 64),
         )
 
@@ -188,13 +189,21 @@ class CanonicalEvent:
             "host": self.host,
             "client_ip": self.client_ip,
             "user": self.user,
-            "http": None if self.http is None else {
-                "method": self.http.method, "target": self.http.target,
-                "protocol": self.http.protocol, "status_code": self.http.status_code,
-                "response_bytes": self.http.response_bytes, "duration_ms": self.http.duration_ms,
+            "http": None
+            if self.http is None
+            else {
+                "method": self.http.method,
+                "target": self.http.target,
+                "protocol": self.http.protocol,
+                "status_code": self.http.status_code,
+                "response_bytes": self.http.response_bytes,
+                "duration_ms": self.http.duration_ms,
             },
-            "auth": None if self.auth is None else {
-                "outcome": self.auth.outcome.value, "action": self.auth.action,
+            "auth": None
+            if self.auth is None
+            else {
+                "outcome": self.auth.outcome.value,
+                "action": self.auth.action,
                 "account": self.auth.account,
             },
             "message": self.message,

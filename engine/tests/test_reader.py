@@ -19,7 +19,8 @@ class StreamingReaderTests(unittest.TestCase):
 
     def test_empty_lines_are_preserved_for_parser_skip_accounting(self):
         records = list(iter_source_lines(io.BytesIO(b"\nvalue\n")))
-        self.assertEqual([record.text for record in records if isinstance(record, SourceLine)], ["", "value"])
+        source_texts = [record.text for record in records if isinstance(record, SourceLine)]
+        self.assertEqual(source_texts, ["", "value"])
 
     def test_oversized_line_is_discarded_and_reader_recovers(self):
         records = list(

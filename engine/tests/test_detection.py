@@ -13,7 +13,6 @@ from cloudlog_engine.schema.events import (
     SourceInfo,
 )
 
-
 BASE = datetime(2026, 11, 25, 10, 0, tzinfo=UTC)
 
 

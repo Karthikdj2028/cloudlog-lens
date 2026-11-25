@@ -9,13 +9,13 @@ from datetime import UTC, datetime
 from itertools import islice
 from uuid import uuid4
 
+from cloudlog_engine.detection import Finding
+from cloudlog_engine.schema.events import CanonicalEvent
+from cloudlog_engine.schema.redaction import RedactionPolicy, prepare_event_for_persistence
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import AnalysisJob, FindingEvidenceRecord, FindingRecord, JobStageMetric, LogEvent
-from cloudlog_engine.detection import Finding
-from cloudlog_engine.schema.events import CanonicalEvent
-from cloudlog_engine.schema.redaction import RedactionPolicy, prepare_event_for_persistence
 
 _JOB_TRANSITIONS = {
     "queued": {"running", "cancelled", "failed"},

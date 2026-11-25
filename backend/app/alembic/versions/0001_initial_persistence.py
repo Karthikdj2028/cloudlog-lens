@@ -3,8 +3,8 @@
 Revision ID: 0001_initial
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "0001_initial"
 down_revision = None
@@ -33,7 +33,12 @@ def upgrade() -> None:
     op.create_table(
         "log_events",
         sa.Column("event_id", sa.String(36), primary_key=True),
-        sa.Column("job_id", sa.String(36), sa.ForeignKey("analysis_jobs.job_id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "job_id",
+            sa.String(36),
+            sa.ForeignKey("analysis_jobs.job_id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("timestamp", sa.DateTime(timezone=True), nullable=False),
         sa.Column("observed_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("event_type", sa.String(64), nullable=False),
@@ -51,14 +56,25 @@ def upgrade() -> None:
         sa.UniqueConstraint("job_id", "event_id", name="uq_log_events_job_event"),
     )
     op.create_index("ix_log_events_job_timestamp", "log_events", ["job_id", "timestamp"])
-    op.create_index("ix_log_events_job_client_ip_timestamp", "log_events", ["job_id", "client_ip", "timestamp"])
-    op.create_index("ix_log_events_job_event_type_timestamp", "log_events", ["job_id", "event_type", "timestamp"])
+    op.create_index(
+        "ix_log_events_job_client_ip_timestamp", "log_events", ["job_id", "client_ip", "timestamp"]
+    )
+    op.create_index(
+        "ix_log_events_job_event_type_timestamp",
+        "log_events",
+        ["job_id", "event_type", "timestamp"],
+    )
     op.create_index("ix_log_events_job_http_status", "log_events", ["job_id", "http_status"])
 
     op.create_table(
         "findings",
         sa.Column("finding_id", sa.String(36), primary_key=True),
-        sa.Column("job_id", sa.String(36), sa.ForeignKey("analysis_jobs.job_id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "job_id",
+            sa.String(36),
+            sa.ForeignKey("analysis_jobs.job_id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("rule_id", sa.String(128), nullable=False),
         sa.Column("rule_version", sa.String(32), nullable=False),
         sa.Column("title", sa.String(255), nullable=False),
@@ -77,8 +93,18 @@ def upgrade() -> None:
     op.create_table(
         "finding_evidence",
         sa.Column("evidence_id", sa.String(36), primary_key=True),
-        sa.Column("finding_id", sa.String(36), sa.ForeignKey("findings.finding_id", ondelete="CASCADE"), nullable=False),
-        sa.Column("event_id", sa.String(36), sa.ForeignKey("log_events.event_id", ondelete="RESTRICT"), nullable=False),
+        sa.Column(
+            "finding_id",
+            sa.String(36),
+            sa.ForeignKey("findings.finding_id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "event_id",
+            sa.String(36),
+            sa.ForeignKey("log_events.event_id", ondelete="RESTRICT"),
+            nullable=False,
+        ),
         sa.Column("ordinal", sa.Integer(), nullable=False),
         sa.Column("timestamp", sa.DateTime(timezone=True), nullable=False),
         sa.UniqueConstraint("finding_id", "ordinal", name="uq_finding_evidence_ordinal"),
@@ -88,7 +114,12 @@ def upgrade() -> None:
     op.create_table(
         "job_stage_metrics",
         sa.Column("metric_id", sa.String(36), primary_key=True),
-        sa.Column("job_id", sa.String(36), sa.ForeignKey("analysis_jobs.job_id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "job_id",
+            sa.String(36),
+            sa.ForeignKey("analysis_jobs.job_id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("stage", sa.String(64), nullable=False),
         sa.Column("record_count", sa.Integer(), nullable=False),
         sa.Column("duration_seconds", sa.Float(), nullable=False),

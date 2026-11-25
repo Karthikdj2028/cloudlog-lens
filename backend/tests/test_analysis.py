@@ -3,9 +3,14 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 import pytest
-
 from cloudlog_engine.detection import DetectionConfig
-from cloudlog_engine.schema.events import AuthOutcome, AuthenticationInfo, CanonicalEvent, SourceInfo
+from cloudlog_engine.schema.events import (
+    AuthenticationInfo,
+    AuthOutcome,
+    CanonicalEvent,
+    SourceInfo,
+)
+
 from app.core.database import build_engine, build_session_factory, session_scope
 from app.models import Base
 from app.services.analysis import persist_and_detect_events

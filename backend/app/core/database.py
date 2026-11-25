@@ -14,11 +14,13 @@ def build_engine(database_url: str, *, echo: bool = False) -> Engine:
     connect_args = {"check_same_thread": False} if database_url.startswith("sqlite") else {}
     engine = create_engine(database_url, echo=echo, connect_args=connect_args)
     if database_url.startswith("sqlite"):
+
         @event.listens_for(engine, "connect")
         def _enable_foreign_keys(dbapi_connection, _connection_record) -> None:
             cursor = dbapi_connection.cursor()
             cursor.execute("PRAGMA foreign_keys=ON")
             cursor.close()
+
     return engine
 
 

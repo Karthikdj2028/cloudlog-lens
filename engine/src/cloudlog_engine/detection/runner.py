@@ -73,8 +73,7 @@ class DetectionAccumulator:
         ) or event.event_type.casefold() in {"auth.failure", "login.failure"}
         if auth_failed:
             account = (
-                event.auth.account if event.auth and event.auth.account
-                else event.user or "unknown"
+                event.auth.account if event.auth and event.auth.account else event.user or "unknown"
             )
             self._add(
                 "auth.repeated_failures",

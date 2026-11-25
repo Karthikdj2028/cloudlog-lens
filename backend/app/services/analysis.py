@@ -5,10 +5,9 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from sqlalchemy.orm import Session
-
 from cloudlog_engine.detection import DetectionAccumulator, DetectionConfig, Finding
 from cloudlog_engine.schema.events import CanonicalEvent
+from sqlalchemy.orm import Session
 
 from .repository import persist_events, persist_findings
 

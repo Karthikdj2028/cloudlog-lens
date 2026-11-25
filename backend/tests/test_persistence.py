@@ -3,6 +3,13 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from cloudlog_engine.detection import DetectionConfig, run_detections
+from cloudlog_engine.schema.events import (
+    AuthenticationInfo,
+    AuthOutcome,
+    CanonicalEvent,
+    SourceInfo,
+)
 from sqlalchemy import select
 
 from app.core.database import build_engine, build_session_factory, session_scope
@@ -17,13 +24,6 @@ from app.services.repository import (
     persist_findings,
     record_stage_metric,
     transition_job,
-)
-from cloudlog_engine.detection import DetectionConfig, run_detections
-from cloudlog_engine.schema.events import (
-    AuthOutcome,
-    AuthenticationInfo,
-    CanonicalEvent,
-    SourceInfo,
 )
 
 

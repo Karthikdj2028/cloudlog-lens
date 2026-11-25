@@ -1,11 +1,14 @@
 """Validated JSONL spill runs with per-job isolation and a hard byte budget."""
 from __future__ import annotations
+
 import json
 import os
 import tempfile
 import uuid
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
+
 from .errors import CorruptSpillError, SpillBudgetExceededError, SpillError
 from .partitioner import canonical_key_bytes
 
@@ -32,7 +35,9 @@ class SpillManager:
         self._closed = False
         parent = str(directory) if directory is not None else None
         try:
-            self.path = Path(tempfile.mkdtemp(prefix=f"cloudlog_mr_{uuid.uuid4().hex}_", dir=parent))
+            self.path = Path(tempfile.mkdtemp(
+                prefix=f"cloudlog_mr_{uuid.uuid4().hex}_", dir=parent
+            ))
             try:
                 os.chmod(self.path, 0o700)
             except OSError:
@@ -86,6 +91,8 @@ class SpillManager:
             with path.open("rb") as stream:
                 for line in stream:
                     try:
+                        if not line.endswith(b"\n"):
+                            raise ValueError("unterminated spill record")
                         item = json.loads(
                             line,
                             parse_constant=lambda value: (_ for _ in ()).throw(
@@ -96,6 +103,7 @@ class SpillManager:
                         if (
                             not isinstance(item, dict)
                             or set(item) != {"version", "key", "value", "sequence"}
+                            or isinstance(item["version"], bool)
                             or item["version"] != 1
                             or not isinstance(item["sequence"], int)
                             or isinstance(item["sequence"], bool)
@@ -105,8 +113,12 @@ class SpillManager:
                         key = _decode_key(item["key"])
                         key_bytes = canonical_key_bytes(key)
                         yield key_bytes, item["sequence"], key, item["value"]
-                    except (UnicodeDecodeError, json.JSONDecodeError, TypeError, ValueError, KeyError) as exc:
-                        raise CorruptSpillError("spill run contains an invalid record") from exc
+                    except (
+                        UnicodeDecodeError, json.JSONDecodeError, TypeError, ValueError, KeyError
+                    ) as exc:
+                        raise CorruptSpillError(
+                            "spill run contains an invalid record"
+                        ) from exc
         except OSError as exc:
             raise SpillError("could not read spill run") from exc
 
@@ -121,7 +133,7 @@ class SpillManager:
         except OSError as exc:
             raise SpillError("could not completely remove spill workspace") from exc
 
-    def __enter__(self) -> "SpillManager":
+    def __enter__(self) -> SpillManager:
         return self
 
     def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:

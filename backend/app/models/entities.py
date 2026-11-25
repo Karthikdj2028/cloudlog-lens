@@ -3,18 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
-from sqlalchemy import (
-    JSON,
-    DateTime,
-    Float,
-    ForeignKey,
-    Index,
-    Integer,
-    String,
-    Text,
-    UniqueConstraint,
-)
+from sqlalchemy import JSON, DateTime, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -37,15 +28,9 @@ class AnalysisJob(Base):
     error_code: Mapped[str | None] = mapped_column(String(64))
     engine_version: Mapped[str] = mapped_column(String(32), nullable=False, default="0.1.0")
 
-    events: Mapped[list[LogEvent]] = relationship(
-        back_populates="job", cascade="all, delete-orphan"
-    )
-    findings: Mapped[list[FindingRecord]] = relationship(
-        back_populates="job", cascade="all, delete-orphan"
-    )
-    stage_metrics: Mapped[list[JobStageMetric]] = relationship(
-        back_populates="job", cascade="all, delete-orphan"
-    )
+    events: Mapped[list[LogEvent]] = relationship(back_populates="job", cascade="all, delete-orphan")
+    findings: Mapped[list[FindingRecord]] = relationship(back_populates="job", cascade="all, delete-orphan")
+    stage_metrics: Mapped[list[JobStageMetric]] = relationship(back_populates="job", cascade="all, delete-orphan")
 
 
 class LogEvent(Base):
@@ -59,9 +44,7 @@ class LogEvent(Base):
     )
 
     event_id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    job_id: Mapped[str] = mapped_column(
-        ForeignKey("analysis_jobs.job_id", ondelete="CASCADE"), nullable=False
-    )
+    job_id: Mapped[str] = mapped_column(ForeignKey("analysis_jobs.job_id", ondelete="CASCADE"), nullable=False)
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     event_type: Mapped[str] = mapped_column(String(64), nullable=False)
@@ -75,7 +58,7 @@ class LogEvent(Base):
     http_target: Mapped[str | None] = mapped_column(Text)
     http_status: Mapped[int | None] = mapped_column(Integer)
     auth_outcome: Mapped[str | None] = mapped_column(String(16))
-    payload: Mapped[dict] = mapped_column(JSON, nullable=False)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
 
     job: Mapped[AnalysisJob] = relationship(back_populates="events")
 
@@ -88,9 +71,7 @@ class FindingRecord(Base):
     )
 
     finding_id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    job_id: Mapped[str] = mapped_column(
-        ForeignKey("analysis_jobs.job_id", ondelete="CASCADE"), nullable=False
-    )
+    job_id: Mapped[str] = mapped_column(ForeignKey("analysis_jobs.job_id", ondelete="CASCADE"), nullable=False)
     rule_id: Mapped[str] = mapped_column(String(128), nullable=False)
     rule_version: Mapped[str] = mapped_column(String(32), nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -104,9 +85,7 @@ class FindingRecord(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     job: Mapped[AnalysisJob] = relationship(back_populates="findings")
-    evidence: Mapped[list[FindingEvidenceRecord]] = relationship(
-        back_populates="finding", cascade="all, delete-orphan"
-    )
+    evidence: Mapped[list[FindingEvidenceRecord]] = relationship(back_populates="finding", cascade="all, delete-orphan")
 
 
 class FindingEvidenceRecord(Base):
@@ -117,12 +96,8 @@ class FindingEvidenceRecord(Base):
     )
 
     evidence_id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    finding_id: Mapped[str] = mapped_column(
-        ForeignKey("findings.finding_id", ondelete="CASCADE"), nullable=False
-    )
-    event_id: Mapped[str] = mapped_column(
-        ForeignKey("log_events.event_id", ondelete="RESTRICT"), nullable=False
-    )
+    finding_id: Mapped[str] = mapped_column(ForeignKey("findings.finding_id", ondelete="CASCADE"), nullable=False)
+    event_id: Mapped[str] = mapped_column(ForeignKey("log_events.event_id", ondelete="RESTRICT"), nullable=False)
     ordinal: Mapped[int] = mapped_column(Integer, nullable=False)
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
@@ -134,9 +109,7 @@ class JobStageMetric(Base):
     __table_args__ = (Index("ix_job_stage_metrics_job", "job_id"),)
 
     metric_id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    job_id: Mapped[str] = mapped_column(
-        ForeignKey("analysis_jobs.job_id", ondelete="CASCADE"), nullable=False
-    )
+    job_id: Mapped[str] = mapped_column(ForeignKey("analysis_jobs.job_id", ondelete="CASCADE"), nullable=False)
     stage: Mapped[str] = mapped_column(String(64), nullable=False)
     record_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     duration_seconds: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)

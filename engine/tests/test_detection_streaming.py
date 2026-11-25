@@ -5,7 +5,13 @@ from datetime import UTC, datetime
 import pytest
 
 from cloudlog_engine.detection import DetectionAccumulator, DetectionConfig
-from cloudlog_engine.schema.events import AuthOutcome, AuthenticationInfo, CanonicalEvent, HTTPInfo, SourceInfo
+from cloudlog_engine.schema.events import (
+    AuthenticationInfo,
+    AuthOutcome,
+    CanonicalEvent,
+    HTTPInfo,
+    SourceInfo,
+)
 
 
 def make_event(index: int, target: str = "/ok") -> CanonicalEvent:

@@ -6,8 +6,8 @@ import pytest
 
 from cloudlog_engine.detection import DetectionConfig, FindingSeverity, run_detections
 from cloudlog_engine.schema.events import (
-    AuthOutcome,
     AuthenticationInfo,
+    AuthOutcome,
     CanonicalEvent,
     HTTPInfo,
     SourceInfo,

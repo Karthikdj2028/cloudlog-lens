@@ -1,18 +1,36 @@
-# CloudLog API
+# CloudLog API and Persistence
 
-FastAPI application boundary for HTTP contracts, authorization, persistence, and job orchestration.
+The backend owns HTTP contracts, authorization, persistence, and orchestration. The processing engine remains independent of FastAPI and SQLAlchemy.
 
-The API layer may depend on the standalone engine. The engine must never import this package.
+## Install for local development
 
-This milestone creates configuration and package boundaries only. Routers, database models,
-workers, and service implementations will be added in later milestones.
+Requires Python 3.12 or newer. From the `backend` directory:
 
-## Development
+```powershell
+py -3.13 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -e ..\engine
+python -m pip install -e ".[dev]"
+```
 
-Create a virtual environment, then install this package with its development extra:
+Run the backend test suite:
 
-    python -m pip install -e ".[dev]"
+```powershell
+python -m pytest -v
+python -m ruff check app tests
+python -m ruff format --check app tests
+```
 
-Run backend tests from this directory with:
+## Database
 
-    python -m pytest
+SQLite is the local default. Run Alembic migrations from this directory:
+
+```powershell
+$env:CLOUDLOG_DATABASE_URL = "sqlite:///./cloudlog_lens.db"
+python -m alembic -c alembic.ini upgrade head
+```
+
+The repository layer accepts an explicit SQLAlchemy session. The caller owns transaction commit/rollback. Event persistence consumes iterables in bounded batches and applies canonical-event redaction before storing the JSON payload. Multiprocessing workers must never write to this database.
+
+PostgreSQL is a later hosted target; local SQLite is the current implementation target. No database is created merely by importing the package.

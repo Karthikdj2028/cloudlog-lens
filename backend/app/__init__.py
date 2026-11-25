@@ -1,1 +1,1 @@
-"""CloudLog Lens FastAPI application package."""
+"""CloudLog Lens API and persistence package."""

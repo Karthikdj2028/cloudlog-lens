@@ -1,5 +1,6 @@
 """Spawn-based bounded parallel mapper with parent-owned shuffle and reduce."""
 from __future__ import annotations
+
 import concurrent.futures
 import json
 import multiprocessing
@@ -9,7 +10,11 @@ from datetime import datetime
 from typing import Any
 
 from cloudlog_engine.schema.events import (
-    AuthenticationInfo, CanonicalEvent, EventSeverity, HTTPInfo, SourceInfo,
+    AuthenticationInfo,
+    CanonicalEvent,
+    EventSeverity,
+    HTTPInfo,
+    SourceInfo,
 )
 from .errors import JobCancelledError, WorkerExecutionError
 from .models import ExecutionMode, JobConfiguration, JobMetrics, JobResult
@@ -17,6 +22,7 @@ from .partitioner import canonical_key_bytes
 from .protocols import Mapper, Reducer
 from .shuffle import Shuffle
 from .spill import SpillManager
+
 
 def _encode_input(record: Any) -> tuple[str, Any]:
     if isinstance(record, CanonicalEvent):

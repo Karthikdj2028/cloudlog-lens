@@ -5,15 +5,8 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from sqlalchemy import select
 
-from cloudlog_engine.detection import DetectionConfig, run_detections
-from cloudlog_engine.schema.events import (
-    AuthOutcome,
-    AuthenticationInfo,
-    CanonicalEvent,
-    SourceInfo,
-)
 from app.core.database import build_engine, build_session_factory, session_scope
-from app.models import Base, FindingEvidenceRecord, FindingRecord, LogEvent
+from app.models import Base, FindingEvidenceRecord
 from app.services.repository import (
     InvalidJobTransition,
     MissingEvidenceEvent,
@@ -24,6 +17,13 @@ from app.services.repository import (
     persist_findings,
     record_stage_metric,
     transition_job,
+)
+from cloudlog_engine.detection import DetectionConfig, run_detections
+from cloudlog_engine.schema.events import (
+    AuthOutcome,
+    AuthenticationInfo,
+    CanonicalEvent,
+    SourceInfo,
 )
 
 
@@ -74,7 +74,7 @@ def test_job_event_finding_lifecycle_and_redaction(session_factory):
 
 def test_finding_cannot_reference_another_jobs_event(session_factory):
     event = make_event(1)
-    finding, = run_detections([event], DetectionConfig(failed_login_threshold=1))
+    (finding,) = run_detections([event], DetectionConfig(failed_login_threshold=1))
     with session_scope(session_factory) as session:
         first = create_job(session, "first.log")
         transition_job(session, first.job_id, "running")
@@ -111,7 +111,7 @@ def test_pagination_is_bounded(session_factory):
 
 def test_evidence_foreign_key_is_persisted(session_factory):
     event = make_event(1)
-    finding, = run_detections([event], DetectionConfig(failed_login_threshold=1))
+    (finding,) = run_detections([event], DetectionConfig(failed_login_threshold=1))
     with session_scope(session_factory) as session:
         job = create_job(session, "sample.log")
         transition_job(session, job.job_id, "running")

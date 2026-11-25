@@ -1,9 +1,11 @@
 """Configuration, metrics, and result contracts for MapReduce jobs."""
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
-from typing import Generic, TypeVar
+from typing import TypeVar
+
 from .errors import ConfigurationError
 
 TOut = TypeVar("TOut")
@@ -25,18 +27,23 @@ class JobConfiguration:
     spill_directory: Path | None = None
 
     def __post_init__(self) -> None:
-        for name in ("num_partitions", "num_workers", "batch_size",
-                     "max_in_memory_records_per_partition",
-                     "max_in_memory_bytes_per_partition", "max_output_records"):
+        for name in (
+            "num_partitions", "num_workers", "batch_size",
+            "max_in_memory_records_per_partition",
+            "max_in_memory_bytes_per_partition", "max_output_records",
+        ):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 1:
                 raise ConfigurationError(f"{name} must be a positive integer")
-        if (isinstance(self.max_spill_bytes, bool)
-                or not isinstance(self.max_spill_bytes, int) or self.max_spill_bytes < 1024):
-            raise ConfigurationError("max_spill_bytes must be an integer of at least 1024")
+        if (
+            isinstance(self.max_spill_bytes, bool)
+            or not isinstance(self.max_spill_bytes, int)
+            or self.max_spill_bytes < 1
+        ):
+            raise ConfigurationError("max_spill_bytes must be a positive integer")
         try:
             object.__setattr__(self, "mode", ExecutionMode(self.mode))
-        except ValueError as exc:
+        except (TypeError, ValueError) as exc:
             raise ConfigurationError("unsupported execution mode") from exc
         if self.spill_directory is not None:
             object.__setattr__(self, "spill_directory", Path(self.spill_directory))
@@ -51,9 +58,9 @@ class JobMetrics:
     spill_files: int = 0
     worker_count: int = 1
     mode: ExecutionMode = ExecutionMode.SEQUENTIAL
-    stage_seconds: tuple[tuple[str, float], ...] = field(default_factory=tuple)
+    stage_seconds: tuple[tuple[str, float], ...] = ()
 
 @dataclass(frozen=True, slots=True)
-class JobResult(Generic[TOut]):
+class JobResult[TOut]:
     outputs: tuple[TOut, ...]
     metrics: JobMetrics

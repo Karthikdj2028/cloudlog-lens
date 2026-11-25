@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import math
 import re
+from collections.abc import Iterable
 from datetime import UTC, datetime
+from itertools import islice
 from uuid import uuid4
 
 from sqlalchemy import select
@@ -12,13 +15,7 @@ from sqlalchemy.orm import Session
 from cloudlog_engine.detection import Finding
 from cloudlog_engine.schema.events import CanonicalEvent, RedactionPolicy, prepare_event_for_persistence
 
-from app.models import (
-    AnalysisJob,
-    FindingEvidenceRecord,
-    FindingRecord,
-    JobStageMetric,
-    LogEvent,
-)
+from app.models import AnalysisJob, FindingEvidenceRecord, FindingRecord, JobStageMetric, LogEvent
 
 _JOB_TRANSITIONS = {
     "queued": {"running", "cancelled", "failed"},
@@ -45,12 +42,11 @@ class MissingEvidenceEvent(RepositoryError):
 def create_job(session: Session, source_name: str, *, now: datetime | None = None) -> AnalysisJob:
     if not source_name or len(source_name) > 255 or "\x00" in source_name:
         raise ValueError("source_name must contain 1-255 safe characters")
-    timestamp = (now or datetime.now(UTC)).astimezone(UTC)
     job = AnalysisJob(
         job_id=str(uuid4()),
         source_name=source_name,
         status="queued",
-        created_at=timestamp,
+        created_at=(now or datetime.now(UTC)).astimezone(UTC),
     )
     session.add(job)
     session.flush()
@@ -88,13 +84,13 @@ def transition_job(
 def persist_events(
     session: Session,
     job_id: str,
-    events: list[CanonicalEvent] | tuple[CanonicalEvent, ...],
+    events: Iterable[CanonicalEvent],
     *,
     redaction_policy: RedactionPolicy | None = None,
     batch_size: int = 500,
 ) -> int:
-    """Persist redacted canonical events in bounded batches in the caller transaction."""
-    if batch_size < 1 or batch_size > 5000:
+    """Consume and persist an event stream in bounded batches in the caller transaction."""
+    if isinstance(batch_size, bool) or not 1 <= batch_size <= 5000:
         raise ValueError("batch_size must be between 1 and 5000")
     job = session.get(AnalysisJob, job_id)
     if job is None:
@@ -102,10 +98,11 @@ def persist_events(
     if job.status != "running":
         raise InvalidJobTransition("events can only be persisted while a job is running")
 
+    iterator = iter(events)
     count = 0
-    for start in range(0, len(events), batch_size):
+    while batch := list(islice(iterator, batch_size)):
         rows = []
-        for original in events[start : start + batch_size]:
+        for original in batch:
             if not isinstance(original, CanonicalEvent):
                 raise TypeError("events must contain CanonicalEvent instances")
             event = prepare_event_for_persistence(original, redaction_policy)
@@ -175,11 +172,11 @@ def persist_findings(session: Session, job_id: str, findings: tuple[Finding, ...
                 evidence=[
                     FindingEvidenceRecord(
                         evidence_id=str(uuid4()),
-                        event_id=evidence.event_id,
+                        event_id=item.event_id,
                         ordinal=ordinal,
-                        timestamp=evidence.timestamp,
+                        timestamp=item.timestamp,
                     )
-                    for ordinal, evidence in enumerate(finding.evidence)
+                    for ordinal, item in enumerate(finding.evidence)
                 ],
             )
         )
@@ -197,10 +194,19 @@ def record_stage_metric(
     duration_seconds: float,
     spill_bytes: int = 0,
 ) -> JobStageMetric:
-    if not stage or len(stage) > 64 or min(record_count, spill_bytes) < 0:
+    if (
+        not stage
+        or len(stage) > 64
+        or isinstance(record_count, bool)
+        or not isinstance(record_count, int)
+        or record_count < 0
+        or isinstance(spill_bytes, bool)
+        or not isinstance(spill_bytes, int)
+        or spill_bytes < 0
+        or not math.isfinite(duration_seconds)
+        or duration_seconds < 0
+    ):
         raise ValueError("invalid stage metric")
-    if duration_seconds < 0:
-        raise ValueError("duration_seconds cannot be negative")
     if session.get(AnalysisJob, job_id) is None:
         raise RepositoryError("analysis job not found")
     metric = JobStageMetric(

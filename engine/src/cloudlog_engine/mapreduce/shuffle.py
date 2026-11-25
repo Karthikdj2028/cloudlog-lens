@@ -1,10 +1,12 @@
 """Bounded partition buffers, sorted spill runs, and streaming key groups."""
 from __future__ import annotations
+
 import heapq
 import itertools
 import json
 from collections.abc import Iterator
 from typing import Any
+
 from .partitioner import canonical_key_bytes, partition_for
 from .spill import SpillManager
 
@@ -30,8 +32,10 @@ class Shuffle:
         size = len(key_bytes) + value_bytes + 24
         self.buffers[partition].append((key_bytes, sequence, key, value))
         self.buffer_bytes[partition] += size
-        if (len(self.buffers[partition]) >= self.max_records
-                or self.buffer_bytes[partition] >= self.max_bytes):
+        if (
+            len(self.buffers[partition]) >= self.max_records
+            or self.buffer_bytes[partition] >= self.max_bytes
+        ):
             self._flush(partition)
 
     def _flush(self, partition: int) -> None:

@@ -7,7 +7,6 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from uuid import UUID, uuid5
 
-
 _FINDING_NAMESPACE = UUID("2b7f93a8-1d3a-4d1e-a0c2-7a61b25b1d6f")
 
 
@@ -83,7 +82,12 @@ class Finding:
 
     def __post_init__(self) -> None:
         UUID(self.finding_id)
-        if self.window_start.tzinfo is None or self.window_end.tzinfo is None:
+        if (
+            self.window_start.tzinfo is None
+            or self.window_start.utcoffset() is None
+            or self.window_end.tzinfo is None
+            or self.window_end.utcoffset() is None
+        ):
             raise ValueError("finding windows must be timezone-aware")
         if self.window_end < self.window_start:
             raise ValueError("finding window_end cannot precede window_start")
@@ -91,6 +95,7 @@ class Finding:
             raise ValueError("finding values must satisfy the configured threshold")
         if not self.rule_id or not self.rule_version or not self.evidence:
             raise ValueError("finding requires rule metadata and at least one evidence item")
+        object.__setattr__(self, "severity", FindingSeverity(self.severity))
 
     @classmethod
     def build(
@@ -109,14 +114,16 @@ class Finding:
         evidence: tuple[DetectionEvidence, ...],
     ) -> Finding:
         """Build a stable ID from the rule, subject, and window."""
-        identity = "|".join(
-            (
-                rule_id,
-                subject,
-                window_start.astimezone(UTC).isoformat(),
-                window_end.astimezone(UTC).isoformat(),
-            )
-        )
+        if (
+            window_start.tzinfo is None
+            or window_start.utcoffset() is None
+            or window_end.tzinfo is None
+            or window_end.utcoffset() is None
+        ):
+            raise ValueError("finding windows must be timezone-aware")
+        start_utc = window_start.astimezone(UTC)
+        end_utc = window_end.astimezone(UTC)
+        identity = "|".join((rule_id, subject, start_utc.isoformat(), end_utc.isoformat()))
         return cls(
             finding_id=str(uuid5(_FINDING_NAMESPACE, identity)),
             rule_id=rule_id,
@@ -125,8 +132,8 @@ class Finding:
             description=description,
             severity=severity,
             subject=subject,
-            window_start=window_start.astimezone(UTC),
-            window_end=window_end.astimezone(UTC),
+            window_start=start_utc,
+            window_end=end_utc,
             threshold=threshold,
             observed_value=observed_value,
             evidence=evidence,

@@ -22,12 +22,16 @@ def _encode_input(record: Any) -> tuple[str, Any]:
     if isinstance(record, CanonicalEvent):
         return ("canonical_event_v1", record.to_dict())
     try:
-        json.dumps(record, ensure_ascii=False, allow_nan=False)
+        # Normalize tuples and mapping implementations to the exact JSON data
+        # shape that workers will receive; do not pickle arbitrary caller objects.
+        payload = json.loads(json.dumps(
+            record, ensure_ascii=False, allow_nan=False, separators=(",", ":")
+        ))
     except (TypeError, ValueError) as exc:
         raise TypeError(
             f"multiprocessing input type {type(record).__name__} is not supported"
         ) from exc
-    return ("json", record)
+    return ("json", payload)
 
 def _parse_datetime(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))

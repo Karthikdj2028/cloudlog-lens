@@ -1,4 +1,5 @@
 """Bounded partition buffers, sorted spill runs, and streaming key groups."""
+
 from __future__ import annotations
 
 import heapq
@@ -10,25 +11,27 @@ from typing import Any
 from .partitioner import canonical_key_bytes, partition_for
 from .spill import SpillManager
 
+
 class Shuffle:
-    def __init__(self, partitions: int, max_records: int, max_bytes: int,
-                 spill: SpillManager) -> None:
+    def __init__(
+        self, partitions: int, max_records: int, max_bytes: int, spill: SpillManager
+    ) -> None:
         self.partitions = partitions
         self.max_records = max_records
         self.max_bytes = max_bytes
         self.spill = spill
-        self.buffers: list[list[tuple[bytes, int, Any, Any]]] = [
-            [] for _ in range(partitions)
-        ]
+        self.buffers: list[list[tuple[bytes, int, Any, Any]]] = [[] for _ in range(partitions)]
         self.buffer_bytes = [0] * partitions
         self.runs: list[list[object]] = [[] for _ in range(partitions)]
 
     def add(self, key: Any, value: Any, sequence: int) -> None:
         key_bytes = canonical_key_bytes(key)
         partition = partition_for(key, self.partitions)
-        value_bytes = len(json.dumps(
-            value, ensure_ascii=False, separators=(",", ":"), allow_nan=False
-        ).encode("utf-8"))
+        value_bytes = len(
+            json.dumps(value, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode(
+                "utf-8"
+            )
+        )
         size = len(key_bytes) + value_bytes + 24
         self.buffers[partition].append((key_bytes, sequence, key, value))
         self.buffer_bytes[partition] += size
@@ -50,9 +53,9 @@ class Shuffle:
         for partition in range(self.partitions):
             sources = [self.spill.read_run(path) for path in self.runs[partition]]
             if self.buffers[partition]:
-                sources.append(iter(sorted(
-                    self.buffers[partition], key=lambda item: (item[0], item[1])
-                )))
+                sources.append(
+                    iter(sorted(self.buffers[partition], key=lambda item: (item[0], item[1])))
+                )
             merged = heapq.merge(*sources, key=lambda item: (item[0], item[1]))
             for _, group in itertools.groupby(merged, key=lambda item: item[0]):
                 first = next(group)

@@ -1,4 +1,5 @@
 """Spawn-based bounded parallel mapper with parent-owned shuffle and reduce."""
+
 from __future__ import annotations
 
 import concurrent.futures
@@ -16,6 +17,7 @@ from cloudlog_engine.schema.events import (
     HTTPInfo,
     SourceInfo,
 )
+
 from .errors import JobCancelledError, WorkerExecutionError
 from .models import ExecutionMode, JobConfiguration, JobMetrics, JobResult
 from .partitioner import canonical_key_bytes
@@ -30,17 +32,19 @@ def _encode_input(record: Any) -> tuple[str, Any]:
     try:
         # Normalize tuples and mapping implementations to the exact JSON data
         # shape that workers will receive; do not pickle arbitrary caller objects.
-        payload = json.loads(json.dumps(
-            record, ensure_ascii=False, allow_nan=False, separators=(",", ":")
-        ))
+        payload = json.loads(
+            json.dumps(record, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
+        )
     except (TypeError, ValueError) as exc:
         raise TypeError(
             f"multiprocessing input type {type(record).__name__} is not supported"
         ) from exc
     return ("json", payload)
 
+
 def _parse_datetime(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
 
 def _decode_input(encoded: tuple[str, Any]) -> Any:
     kind, payload = encoded
@@ -55,12 +59,20 @@ def _decode_input(encoded: tuple[str, Any]) -> Any:
     return CanonicalEvent(
         timestamp=_parse_datetime(payload["timestamp"]),
         observed_at=_parse_datetime(payload["observed_at"]),
-        event_type=payload["event_type"], event_id=payload["event_id"],
-        schema_version=payload["schema_version"], severity=EventSeverity(payload["severity"]),
-        source=source, host=payload["host"], client_ip=payload["client_ip"],
-        user=payload["user"], http=http, auth=auth, message=payload["message"],
+        event_type=payload["event_type"],
+        event_id=payload["event_id"],
+        schema_version=payload["schema_version"],
+        severity=EventSeverity(payload["severity"]),
+        source=source,
+        host=payload["host"],
+        client_ip=payload["client_ip"],
+        user=payload["user"],
+        http=http,
+        auth=auth,
+        message=payload["message"],
         attributes=payload["attributes"],
     )
+
 
 def _map_batch(mapper: Any, batch: list[tuple[str, Any]]) -> list[tuple[Any, Any]]:
     mapped: list[tuple[Any, Any]] = []
@@ -71,11 +83,10 @@ def _map_batch(mapper: Any, batch: list[tuple[str, Any]]) -> list[tuple[Any, Any
             try:
                 json.dumps(value, ensure_ascii=False, allow_nan=False)
             except (TypeError, ValueError) as exc:
-                raise TypeError(
-                    "multiprocessing mapper values must be JSON-compatible"
-                ) from exc
+                raise TypeError("multiprocessing mapper values must be JSON-compatible") from exc
             mapped.append((key, value))
     return mapped
+
 
 def _batches(records: Iterable[Any], size: int):
     batch: list[Any] = []
@@ -87,9 +98,13 @@ def _batches(records: Iterable[Any], size: int):
     if batch:
         yield batch
 
+
 def execute_multiprocessing(
-    records: Iterable[Any], mapper: Mapper[Any, Any, Any],
-    reducer: Reducer[Any, Any, Any], config: JobConfiguration, *,
+    records: Iterable[Any],
+    mapper: Mapper[Any, Any, Any],
+    reducer: Reducer[Any, Any, Any],
+    config: JobConfiguration,
+    *,
     cancel_check: Any = None,
 ) -> JobResult[Any]:
     """Map bounded batches in spawned workers; shuffle/reduce in the parent.
@@ -105,17 +120,17 @@ def execute_multiprocessing(
     context = multiprocessing.get_context("spawn")
     with SpillManager(config.max_spill_bytes, config.spill_directory) as spill:
         shuffle = Shuffle(
-            config.num_partitions, config.max_in_memory_records_per_partition,
-            config.max_in_memory_bytes_per_partition, spill,
+            config.num_partitions,
+            config.max_in_memory_records_per_partition,
+            config.max_in_memory_bytes_per_partition,
+            spill,
         )
         iterator = iter(_batches(records, config.batch_size))
         try:
             with concurrent.futures.ProcessPoolExecutor(
                 max_workers=config.num_workers, mp_context=context
             ) as pool:
-                pending: dict[
-                    concurrent.futures.Future[list[tuple[Any, Any]]], int
-                ] = {}
+                pending: dict[concurrent.futures.Future[list[tuple[Any, Any]]], int] = {}
                 ready: dict[int, list[tuple[Any, Any]]] = {}
                 next_batch = next_to_apply = 0
                 exhausted = False
@@ -163,10 +178,14 @@ def execute_multiprocessing(
                 raise
             raise WorkerExecutionError("multiprocessing execution failed") from exc
         metrics = JobMetrics(
-            input_records=input_count, mapped_records=mapped_count,
-            reduced_records=len(outputs), partitions=config.num_partitions,
-            spill_bytes=spill.bytes_written, spill_files=spill.files_written,
-            worker_count=config.num_workers, mode=ExecutionMode.MULTIPROCESSING,
+            input_records=input_count,
+            mapped_records=mapped_count,
+            reduced_records=len(outputs),
+            partitions=config.num_partitions,
+            spill_bytes=spill.bytes_written,
+            spill_files=spill.files_written,
+            worker_count=config.num_workers,
+            mode=ExecutionMode.MULTIPROCESSING,
             stage_seconds=(("total", time.perf_counter() - started),),
         )
     return JobResult(tuple(outputs), metrics)

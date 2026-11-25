@@ -1,4 +1,5 @@
 """Validated JSONL spill runs with per-job isolation and a hard byte budget."""
+
 from __future__ import annotations
 
 import json
@@ -12,6 +13,7 @@ from typing import Any
 from .errors import CorruptSpillError, SpillBudgetExceededError, SpillError
 from .partitioner import canonical_key_bytes
 
+
 def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     result: dict[str, Any] = {}
     for key, value in pairs:
@@ -20,12 +22,14 @@ def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
         result[key] = value
     return result
 
+
 def _decode_key(value: Any) -> Any:
     if isinstance(value, dict) and set(value) == {"$tuple"}:
         return tuple(_decode_key(item) for item in value["$tuple"])
     if isinstance(value, list):
         return [_decode_key(item) for item in value]
     return value
+
 
 class SpillManager:
     def __init__(self, max_bytes: int, directory: Path | None = None) -> None:
@@ -35,9 +39,9 @@ class SpillManager:
         self._closed = False
         parent = str(directory) if directory is not None else None
         try:
-            self.path = Path(tempfile.mkdtemp(
-                prefix=f"cloudlog_mr_{uuid.uuid4().hex}_", dir=parent
-            ))
+            self.path = Path(
+                tempfile.mkdtemp(prefix=f"cloudlog_mr_{uuid.uuid4().hex}_", dir=parent)
+            )
             try:
                 os.chmod(self.path, 0o700)
             except OSError:
@@ -50,10 +54,16 @@ class SpillManager:
         canonical_key_bytes(key)
         try:
             encoded_key = json.loads(canonical_key_bytes(key))
-            payload = json.dumps(
-                {"version": 1, "key": encoded_key, "value": value, "sequence": sequence},
-                ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False,
-            ).encode("utf-8") + b"\n"
+            payload = (
+                json.dumps(
+                    {"version": 1, "key": encoded_key, "value": value, "sequence": sequence},
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    allow_nan=False,
+                ).encode("utf-8")
+                + b"\n"
+            )
         except (TypeError, ValueError) as exc:
             raise SpillError("intermediate values must be finite JSON-compatible data") from exc
         return payload
@@ -114,11 +124,13 @@ class SpillManager:
                         key_bytes = canonical_key_bytes(key)
                         yield key_bytes, item["sequence"], key, item["value"]
                     except (
-                        UnicodeDecodeError, json.JSONDecodeError, TypeError, ValueError, KeyError
+                        UnicodeDecodeError,
+                        json.JSONDecodeError,
+                        TypeError,
+                        ValueError,
+                        KeyError,
                     ) as exc:
-                        raise CorruptSpillError(
-                            "spill run contains an invalid record"
-                        ) from exc
+                        raise CorruptSpillError("spill run contains an invalid record") from exc
         except OSError as exc:
             raise SpillError("could not read spill run") from exc
 

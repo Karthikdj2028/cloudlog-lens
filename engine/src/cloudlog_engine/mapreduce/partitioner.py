@@ -1,4 +1,5 @@
 """Stable key encoding and partition assignment."""
+
 from __future__ import annotations
 
 import hashlib
@@ -8,8 +9,10 @@ from typing import Any
 
 from .errors import ConfigurationError
 
+
 def canonical_key_bytes(key: Any) -> bytes:
     """Encode supported JSON keys deterministically, preserving tuple identity."""
+
     def validate(value: Any, depth: int = 0) -> Any:
         if depth > 16:
             raise ConfigurationError("key nesting exceeds 16 levels")
@@ -24,14 +27,19 @@ def canonical_key_bytes(key: Any) -> bytes:
         if isinstance(value, list):
             return [validate(item, depth + 1) for item in value]
         raise ConfigurationError(f"unsupported key type: {type(value).__name__}")
+
     try:
         text = json.dumps(
-            validate(key), ensure_ascii=False, sort_keys=True,
-            separators=(",", ":"), allow_nan=False,
+            validate(key),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
         )
     except (TypeError, ValueError) as exc:
         raise ConfigurationError("key cannot be canonically encoded") from exc
     return text.encode("utf-8")
+
 
 def partition_for(key: Any, num_partitions: int) -> int:
     if (

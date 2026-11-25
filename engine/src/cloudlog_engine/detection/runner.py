@@ -154,7 +154,8 @@ class DetectionAccumulator:
                 self.config.request_rate_window_seconds,
                 FindingSeverity.MEDIUM,
                 "Unusually high request rate",
-                "The source generated a high number of HTTP requests within one UTC tumbling window.",
+                "The source generated a high number of HTTP requests within one UTC tumbling "
+                "window.",
             ),
         )
         metadata = {

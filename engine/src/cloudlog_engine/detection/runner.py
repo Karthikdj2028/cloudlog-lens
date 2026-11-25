@@ -26,7 +26,10 @@ def _window_start(timestamp: datetime, seconds: int) -> datetime:
 
 def _suspicious_target(target: str) -> str | None:
     decoded = unquote(target).casefold()
-    path = urlsplit(decoded).path
+    try:
+        path = urlsplit(decoded).path
+    except ValueError:
+        return None
     indicators = (
         ("path-traversal", "../" in path or path.startswith("/..")),
         ("environment-file-probe", path.endswith("/.env") or path == "/.env"),
@@ -204,8 +207,8 @@ def run_detections(
     """Run built-in rules over an iterable using bounded incremental state.
 
     Windows are deterministic UTC tumbling windows. Group state, evidence
-    retained per finding, and total findings are explicitly bounded. Findings
-    are investigative leads, not proof of compromise.
+    retained per finding, and total finding counts are explicitly bounded.
+    Findings are investigative leads, not proof of compromise.
     """
     accumulator = DetectionAccumulator(config)
     for event in events:

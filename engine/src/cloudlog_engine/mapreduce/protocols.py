@@ -1,7 +1,9 @@
 """Structural contracts for mapper and reducer callables."""
 from __future__ import annotations
+
 from collections.abc import Iterable, Iterator
 from typing import Protocol, TypeVar
+
 TIn = TypeVar("TIn", contravariant=True)
 K = TypeVar("K")
 V = TypeVar("V")

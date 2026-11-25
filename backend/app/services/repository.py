@@ -12,10 +12,10 @@ from uuid import uuid4
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from cloudlog_engine.detection import Finding
-from cloudlog_engine.schema.events import CanonicalEvent, RedactionPolicy, prepare_event_for_persistence
-
 from app.models import AnalysisJob, FindingEvidenceRecord, FindingRecord, JobStageMetric, LogEvent
+from cloudlog_engine.detection import Finding
+from cloudlog_engine.schema.events import CanonicalEvent
+from cloudlog_engine.schema.redaction import RedactionPolicy, prepare_event_for_persistence
 
 _JOB_TRANSITIONS = {
     "queued": {"running", "cancelled", "failed"},

@@ -1,10 +1,18 @@
 from __future__ import annotations
+
 from datetime import UTC, datetime
 from pathlib import Path
+
 import pytest
+
 from cloudlog_engine.mapreduce import (
-    CorruptSpillError, ExecutionMode, JobCancelledError, JobConfiguration,
-    SpillBudgetExceededError, execute_job, partition_for,
+    CorruptSpillError,
+    ExecutionMode,
+    JobCancelledError,
+    JobConfiguration,
+    SpillBudgetExceededError,
+    execute_job,
+    partition_for,
 )
 from cloudlog_engine.mapreduce.spill import SpillManager
 from cloudlog_engine.schema.events import CanonicalEvent, SourceInfo

@@ -1,8 +1,10 @@
 """Reference single-process MapReduce execution."""
 from __future__ import annotations
+
 import time
 from collections.abc import Iterable
 from typing import Any
+
 from .errors import JobCancelledError
 from .models import JobConfiguration, JobMetrics, JobResult
 from .protocols import Mapper, Reducer

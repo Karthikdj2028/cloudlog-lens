@@ -1,7 +1,9 @@
 """Public MapReduce job dispatcher."""
 from __future__ import annotations
+
 from collections.abc import Iterable
 from typing import Any
+
 from .models import ExecutionMode, JobConfiguration, JobResult
 from .multiprocessing_runner import execute_multiprocessing
 from .protocols import Mapper, Reducer

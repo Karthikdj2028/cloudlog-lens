@@ -1,4 +1,4 @@
-name: M1 foundation checks
+name: CloudLog Lens quality checks
 
 on:
   pull_request:
@@ -21,6 +21,30 @@ jobs:
         run: python -m pytest engine/tests
       - name: Lint engine
         run: ruff check engine/src engine/tests
+      - name: Check engine formatting
+        run: ruff format --check engine/src engine/tests
+
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Install engine and backend development tools
+        working-directory: backend
+        run: |
+          python -m pip install -e ../engine
+          python -m pip install -e ".[dev]"
+      - name: Run backend tests and migration checks
+        working-directory: backend
+        run: python -m pytest -v
+      - name: Lint backend
+        working-directory: backend
+        run: ruff check app tests
+      - name: Check backend formatting
+        working-directory: backend
+        run: ruff format --check app tests
 
   frontend:
     runs-on: ubuntu-latest
